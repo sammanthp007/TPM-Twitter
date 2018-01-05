@@ -27,17 +27,41 @@ class tweetsViewController: UIViewController, UITableViewDataSource, UITableView
         tableView.delegate = self
         
         // programmitically add the compose button
-        // programmitically add the uibarbutton on the right
-        // let rightButton = UIBarButtonItem(title: "Compose", style: UIBarButtonItemStyle.done, target: self, action: #selector(onSend(_:)))
-        
-        //self.navigationItem.rightBarButtonItem = rightButton
-        
         let rightButton = UIBarButtonItem(title: "Compose", style: UIBarButtonItemStyle.done, target: self, action: #selector(onCompose(_:)))
         
         self.navigationItem.rightBarButtonItem = rightButton
+        
+        // Initialize a UIRefreshControl
+        let refreshControl = UIRefreshControl()
+        refreshControl.addTarget(self, action: #selector(refreshControlAction(_:)), for: UIControlEvents.valueChanged)
+        // add refresh control to table view
+        tableView.insertSubview(refreshControl, at: 0)
 
     }
     
+    
+    func refreshControlAction(_ refreshControl: UIRefreshControl) {
+        
+        // ... Create the URLRequest `myRequest` ...
+        TwitterClient.sharedTwitterClient?.get_tweets(success: {(allTweets: [TwitterTweet]) -> Void in
+            
+            // set array of Tweets
+            self.tweets = allTweets
+            
+            // update table
+            self.tableView.reloadData()
+            
+            // Tell the refreshControl to stop spinning
+            refreshControl.endRefreshing()
+            
+        }, noSuccess: {(error: Error) -> Void in
+            print ("\(error)")
+            
+            // Tell the refreshControl to stop spinning
+            refreshControl.endRefreshing()
+        })
+
+        }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(true)
